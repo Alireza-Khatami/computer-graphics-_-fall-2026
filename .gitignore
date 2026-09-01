@@ -1,0 +1,143 @@
+# ---------------------------------------------------------------
+# Build output
+# ---------------------------------------------------------------
+build/
+Build/
+out/
+bin/
+lib/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+x64/
+x86/
+Win32/
+cmake-build-*/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Makefile
+compile_commands.json
+_deps/
+
+# ---------------------------------------------------------------
+# Compiled objects / binaries
+# (models/**/*.obj are 3D meshes, not compiler output -- keep them)
+# ---------------------------------------------------------------
+*.o
+*.obj
+!models/**/*.obj
+!**/models/**/*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.d
+*.gch
+*.pch
+*.ipch
+*.ilk
+*.exp
+*.idb
+*.pdb
+*.map
+*.su
+*.i*86
+*.x86_64
+*.hex
+*.elf
+
+# Assignment 0/1 rasterizer binaries (no extension on Linux)
+Rasterizer_correct
+Rasterizer_incorrect
+
+# ---------------------------------------------------------------
+# Visual Studio / VS Code / IDE
+# ---------------------------------------------------------------
+.vs/
+*.VC.db
+*.VC.opendb
+*.suo
+*.wsuo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------------------------------------------------------------
+# Render output (large, regenerable)
+# ---------------------------------------------------------------
+*.ppm
+*.pfm
+*.hdr
+*.exr
+binary.ppm
+output.ppm
+
+# ---------------------------------------------------------------
+# Archives (submissions / re-downloadable course bundles)
+# ---------------------------------------------------------------
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+# ---------------------------------------------------------------
+# OS / filesystem cruft
+# ---------------------------------------------------------------
+.DS_Store
+.DS_Store?
+__MACOSX/
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*:Zone.Identifier
+
+# ---------------------------------------------------------------
+# Databases / caches
+# ---------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---------------------------------------------------------------
+# Blender working files
+# ---------------------------------------------------------------
+*.blend1
+*.blend2
+
+# Compiled ray tracer binary (assignment 5)
+RayTracing

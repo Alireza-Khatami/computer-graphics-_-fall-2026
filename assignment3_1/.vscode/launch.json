@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Rasterizer",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Rasterizer",
+            "args": [
+                "./output.png",
+                "/home/alireza/Projects/Graphics/spring_2026_graphics_assignments/assignment3_1/models/spot/spot_triangulated_good.obj",
+                "/home/alireza/Projects/Graphics/spring_2026_graphics_assignments/assignment3_1/models/spot/spot_texture.png"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build"
+        }
+    ]
+}

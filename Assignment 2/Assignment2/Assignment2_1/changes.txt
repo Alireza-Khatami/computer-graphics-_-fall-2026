@@ -1,0 +1,99 @@
+ Summary of Changes
+
+  rasterizer.hpp:
+  1. Added enum class CullMode { None, Back, Front }; (line 44)
+  2. Added CullMode cull_mode member variable (line 103)
+  3. Added get_cull_mode() / set_cull_mode() methods (lines 85-86)
+  4. Added is_back_facing() private method declaration (line 91)
+
+  rasterizer.cpp:
+  1. Added is_back_facing() implementation (lines 37-43) - computes signed area of triangle to determine winding order
+  2. Added culling check in draw() (lines 108-114) - skips triangles based on cull mode before rasterization
+
+
+
+
+  rasterizer.hpp:
+  - Added CullMode enum with None, Back, and Front options
+  - Added cull_mode member variable (defaults to None)
+  - Added get_cull_mode() and set_cull_mode() methods
+  - Added private is_back_facing() helper declaration
+
+  rasterizer.cpp:
+  - Added is_back_facing() function that computes the signed area of the triangle in screen space:
+    - Positive signed area = counter-clockwise vertices = front-facing
+    - Negative signed area = clockwise vertices = back-facing
+  - Added culling check in draw() before rasterization
+
+  Usage:
+  // Enable back face culling
+  rasterizer.set_cull_mode(rst::CullMode::Back);
+
+  // Or front face culling
+  rasterizer.set_cull_mode(rst::CullMode::Front);
+
+  // Disable culling
+  rasterizer.set_cull_mode(rst::CullMode::None);
+
+
+
+
+  Done! I added two new triangles:
+
+  | Triangle     | Vertices                        | Winding | Color              | Alpha |
+  |--------------|---------------------------------|---------|--------------------|-------|
+  | Front-facing | {-4,2,-3}, {-3,4,-3}, {-5,4,-3} | CCW     | Blue (0,100,255)   | 1.0   |
+  | Back-facing  | {4,2,-3}, {6,4,-3}, {5,4,-3}    | CW      | Yellow (255,255,0) | 1.0   |
+
+
+
+
+  Crash fix (rasterizer.cpp:160) — added if (x < 0 || x >= width || y < 0 || y >= height) continue; before accessing frame_buf. When a vertex goes behind
+  the near plane, its projected screen coords blow up to huge values. Without this guard, frame_buf[ind] writes out of bounds and crashes.
+
+  View matrix (main.cpp) — reverted to the simple approach: translate the world to put the camera at origin, then rotate around Y. The camera stays at
+  eye_pos, its viewing direction sweeps left/right as you press a/d.
+
+
+
+
+
+    In draw(), is_back_facing is called after the full MVP transform and perspective divide:
+
+  Eigen::Matrix4f mvp = projection * view * model;  // view = camera!
+  // ...vertices transformed by mvp, then perspective divide...
+  bool back_facing = is_back_facing(v);  // v is already in screen space
+
+  The view matrix (which encodes the camera orientation) is baked into mvp. So when the camera rotates, the screen-space positions of the vertices change,
+  and the winding order the function measures automatically reflects the new camera angle. You don't need to pass the camera explicitly.
+
+  However, there is one real issue: when a vertex goes behind the camera, the perspective divide flips its coordinates (because w < 0), which can
+  incorrectly flip the winding order for triangles that straddle the near plane — making a front-facing triangle look back-facing and get wrongly culled.
+
+  The proper fix for that edge case is to cull using the view-space normal instead of screen-space winding:
+
+  // In view space, before projection
+  // face normal dot view direction <= 0 → back-facing
+
+  But this requires restructuring the draw loop. For now, with the bounds-check fix in place, those degenerate triangles simply won't render (rather than
+  crashing), which is acceptable behavior.
+
+  Do you want me to implement the view-space normal approach for mo
+
+
+
+
+
+  
+  1. Compute the signed area
+    - After the MVP transform and viewport mapping, compute the 2D signed area of the triangle using the cross product of two screen-space edge vectors:
+  signed_area = (v1 - v0) × (v2 - v0)
+    - A positive signed area means the vertices wind counter-clockwise (CCW) → the triangle is front-facing.
+    - A negative signed area means the vertices wind clockwise (CW) → the triangle is back-facing.
+  2. Apply the cull mode
+    - CullMode::None — no triangle is discarded; all triangles proceed to rasterization.
+    - CullMode::Back — triangles whose signed area is negative (CW / back-facing) are skipped.
+    - CullMode::Front — triangles whose signed area is positive (CCW / front-facing) are skipped.
+  3. Skip or continue
+    - If the triangle passes the cull test (or culling is disabled), it is forwarded to rasterize_triangle.
+    - If it fails the cull test, it is discarded entirely — no pixels are touched and no depth or color writes occur for that triangle.
