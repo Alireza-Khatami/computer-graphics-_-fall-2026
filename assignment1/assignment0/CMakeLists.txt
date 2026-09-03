@@ -12,6 +12,11 @@ add_executable(Rasterizer
     main.cpp
     rasterizer.hpp rasterizer.cpp
     Triangle.hpp  Triangle.cpp
+    Quad.hpp      Quad.cpp
+    transforms.hpp transforms.cpp
+    scene.hpp
+    triangle_scene.hpp triangle_scene.cpp
+    cube_scene.hpp cube_scene.cpp
 )
 
 # Link libraries (OpenCV provides include dirs via the target, Eigen is header-only)
