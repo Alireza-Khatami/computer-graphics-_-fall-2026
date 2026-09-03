@@ -1,8 +1,10 @@
 # ---------------------------------------------------------------
 # Build output
 # ---------------------------------------------------------------
-build/
-Build/
+# Build directories: their contents are ignored, but the compiled reference
+# executables are kept -- see "Reference executables" at the end of this file.
+**/build/*
+**/Build/*
 out/
 bin/
 lib/
@@ -141,3 +143,24 @@ venv/
 
 # Compiled ray tracer binary (assignment 5)
 RayTracing
+
+# ---------------------------------------------------------------
+# Reference executables
+# The compiled binaries are committed on purpose so that a working
+# reference build is available without compiling from source.
+# These negations must stay at the end of the file: for a given path the
+# LAST matching pattern wins.
+# ---------------------------------------------------------------
+!**/build/Rasterizer
+!**/build/Rasterizer_*
+!**/build/RST
+!**/build/SRT
+!**/build/TRS
+!**/build/TSR
+!**/build/BezierCurve
+!**/build/BezierCurve_*
+!**/build/RayTracing
+!**/build/RayTracing_*
+!**/build/*.exe
+!**/Rasterizer_correct
+!**/Rasterizer_incorrect
