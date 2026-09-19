@@ -35,35 +35,22 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f) {
 }
 
 bool rst::rasterizer::is_back_facing(const Eigen::Vector4f* v) const {
-    // Compute signed area using cross product of edges in screen space
-    // If signed area < 0, vertices are clockwise (back-facing)
-    // If signed area > 0, vertices are counter-clockwise (front-facing)
-    float signed_area = - ((v[1].x() - v[0].x()) * (v[2].y() - v[0].y())
-                      - (v[1].y() - v[0].y()) * (v[2].x() - v[0].x()));
-    return signed_area < 0;
+    // TODO: Implement this function
+    // This function receives the three screen-space vertices of a triangle
+    // (v[0], v[1], v[2]).
+    // Step 1: Compute the signed area of the triangle using the 2D cross
+    //         product of two of its edge vectors.
+    // Step 2: Return true if the triangle is back-facing, false if it is
+    //         front-facing. You only need the sign of the area, not its
+    //         magnitude.
+    return false;
 }
 
 
 static bool insideTriangle(int x, int y, const Vector3f* _v) {
-    auto cross2D = [](const Eigen::Vector3f& v1, const Eigen::Vector3f& v2) {
-        return v1.x() * v2.y() - v1.y() * v2.x();  // ignore z
-        };
-    Vector3f A = _v[0], B = _v[1], C = _v[2];
-    bool inside = false;
-    Vector3f P(x + .5, y + .5, 0);
-    Eigen::Vector3f AB = B - A, AP = P - A;
-    Eigen::Vector3f BC = C - B, BP = P - B;
-    Eigen::Vector3f CA = A - C, CP = P - C;
-
-    float cross1 = cross2D(AB, AP);
-    float cross2 = cross2D(BC, BP);
-    float cross3 = cross2D(CA, CP);
-
-    return (cross1 >= 0 && cross2 >= 0 && cross3 >= 0) ||
-        (cross1 <= 0 && cross2 <= 0 && cross3 <= 0);
     // TODO : Implement this function to check if the point (x, y) is inside the
     // triangle represented by three vertices: _v[0], _v[1], _v[2]
-
+    return false;
 }
 
 
