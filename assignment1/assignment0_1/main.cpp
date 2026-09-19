@@ -15,7 +15,7 @@ namespace {
 
 constexpr int kWidth = 700;
 constexpr int kHeight = 700;
-constexpr char kWindowName[] = "CS 6366 - Assignment 1";
+constexpr char kWindowName[] = "CS 4361 - Assignment 1";
 
 void print_usage(const char* exe) {
   printf(
@@ -105,7 +105,7 @@ int main(int argc, const char** argv) {
   // ---------------------------------------------------------------------
   // Interactive loop
   // ---------------------------------------------------------------------
-  printf("\n=== CS 6366 - Assignment 1 ===\n");
+  printf("\n=== CS 4361 - Assignment 1 ===\n");
   printf("  1 / 2 or TAB : switch scene      ESC : quit\n");
   printf("current scene: %s\n", scenes[current]->name());
   scenes[current]->print_controls();

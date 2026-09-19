@@ -103,10 +103,10 @@ void CubeScene::print_camera() const {
   // Half of the vertical extent of the world that is visible at the distance
   // of the cube. Keeping this value constant while changing the field of view
   // is exactly what a "dolly zoom" does.
-  // const float half_height =
-  //     eye_dist_ * std::tan(static_cast<float>(DEG2RAD(eye_fov_ / 2.0)));
-  // printf("[Cube] fovY = %6.1f deg   distance = %5.2f   d*tan(fov/2) = %6.3f\n",
-  //        eye_fov_, eye_dist_, half_height);
+  const float half_height =
+      eye_dist_ * std::tan(static_cast<float>(DEG2RAD(eye_fov_ / 2.0)));
+  printf("[Cube] fovY = %6.1f deg   distance = %5.2f   d*tan(fov/2) = %6.3f\n",
+         eye_fov_, eye_dist_, half_height);
 }
 
 void CubeScene::print_controls() const {

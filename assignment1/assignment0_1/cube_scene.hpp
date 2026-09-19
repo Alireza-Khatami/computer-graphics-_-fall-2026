@@ -38,7 +38,7 @@ class CubeScene : public Scene {
   // perspective (strongly converging edges, front face much larger than the
   // back face).
   float eye_fov_ = 150.0f;
-  float eye_dist_ = 2.5f;
+  float eye_dist_ = 1.6f;
   float orbit_ = 0.5f;   // rotation of the camera around the Y axis (radians)
   float eye_height_ = 0.8f;
 
