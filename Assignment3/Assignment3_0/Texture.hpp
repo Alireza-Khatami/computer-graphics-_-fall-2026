@@ -67,8 +67,8 @@ class Texture {
     if (u > 1) u = 1;
     if (v > 1) v = 1;
 
-    const float u_img = u * width;
-    const float v_img = (1 - v) * height;
+    const float u_img = u * (width - 1);
+    const float v_img = (1 - v) * (height - 1);
 
     int x0 = static_cast<int>(u_img);
     int y0 = static_cast<int>(v_img);

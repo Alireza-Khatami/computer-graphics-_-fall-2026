@@ -327,12 +327,16 @@ void rst::rasterizer::draw(std::vector<Triangle*>& TriangleList) {
       vec.z() /= vec.w();
     }
 
-    Eigen::Vector4f n[] = {view * model * to_vec4(t->normal[0], 0.0f),
-                           view * model * to_vec4(t->normal[1], 0.0f),
-                           view * model * to_vec4(t->normal[2], 0.0f)};
+    // Normals must be transformed by the inverse-transpose of the model-view
+    // matrix; view * model only works while the model has no non-uniform scale.
+    Eigen::Matrix3f normal_matrix =
+        (view * model).topLeftCorner<3, 3>().inverse().transpose();
+    Eigen::Vector3f n[] = {(normal_matrix * t->normal[0]).normalized(),
+                           (normal_matrix * t->normal[1]).normalized(),
+                           (normal_matrix * t->normal[2]).normalized()};
     TBN.col(0) = (view * model * to_vec4(TBN.col(0), 0.0f)).head<3>();
     TBN.col(1) = (view * model * to_vec4(TBN.col(1), 0.0f)).head<3>();
-    TBN.col(2) = (view * model * to_vec4(TBN.col(2), 0.0f)).head<3>();
+    TBN.col(2) = (normal_matrix * TBN.col(2)).normalized();
 
     // Viewport transformation
     for (auto& vert : v) {
@@ -348,7 +352,7 @@ void rst::rasterizer::draw(std::vector<Triangle*>& TriangleList) {
 
     for (int i = 0; i < 3; ++i) {
       // view space normal
-      newtri.setNormal(i, n[i].head<3>());
+      newtri.setNormal(i, n[i]);
     }
 
     newtri.setColor(0, 148, 121.0, 92.0);
@@ -387,11 +391,11 @@ static Eigen::Vector3f interpolate(float alpha, float beta, float gamma,
   auto v0 = (alpha * vert1[0] / t.v[0].w() + beta * vert2[0] / t.v[1].w() +
              gamma * vert3[0] / t.v[2].w()) *
             weight;
-  auto v1 = (alpha * vert1[1] / t.v[0].w() + beta * vert2[0] / t.v[1].w() +
-             gamma * vert3[0] / t.v[2].w()) *
+  auto v1 = (alpha * vert1[1] / t.v[0].w() + beta * vert2[1] / t.v[1].w() +
+             gamma * vert3[1] / t.v[2].w()) *
             weight;
-  auto v2 = (alpha * vert1[0] / t.v[0].w() + beta * vert2[0] / t.v[1].w() +
-             gamma * vert3[0] / t.v[2].w()) *
+  auto v2 = (alpha * vert1[2] / t.v[0].w() + beta * vert2[2] / t.v[1].w() +
+             gamma * vert3[2] / t.v[2].w()) *
             weight;
 
   return Eigen::Vector3f(v0, v1, v2);
@@ -425,6 +429,11 @@ void rst::rasterizer::rasterize_triangle(
     int max_x = std::ceil(std::max({ t.v[0].x(), t.v[1].x(), t.v[2].x() }));
     int min_y = std::floor(std::min({ t.v[0].y(), t.v[1].y(), t.v[2].y() }));
     int max_y = std::ceil(std::max({ t.v[0].y(), t.v[1].y(), t.v[2].y() }));
+    // Keep the box on screen so get_index() never goes out of bounds.
+    min_x = std::max(min_x, 0);
+    min_y = std::max(min_y, 0);
+    max_x = std::min(max_x, width - 1);
+    max_y = std::min(max_y, height - 1);
 
     // Iterate through each pixel in the bounding box
     for (int x = min_x; x <= max_x; ++x) {
@@ -461,14 +470,16 @@ void rst::rasterizer::rasterize_triangle(
                                                           Z, t);
 
                 auto interpolated_normal    = interpolate(alpha, beta, gamma, 
-                                                          t.normal[0], t.normal[1], t.normal[2],1).normalized();
+                                                          t.normal[0], t.normal[1], t.normal[2],
+                                                          Z, t).normalized();
 
                 auto interpolated_texcoords = interpolate(alpha, beta, gamma, 
                                                           t.tex_coords[0], t.tex_coords[1], t.tex_coords[2],
 					                                      Z, t);
 
                 auto interpolated_viewpos   = interpolate(alpha, beta, gamma, 
-                                                          view_pos[0], view_pos[1], view_pos[2],1);
+                                                          view_pos[0], view_pos[1], view_pos[2],
+                                                          Z, t);
                  fragment_shader_payload payload(
                      interpolated_color, interpolated_normal.normalized(),
                      interpolated_texcoords, texture ? &*texture : nullptr, TBN);
