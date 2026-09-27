@@ -16,6 +16,7 @@ endif()
 # include_directories("usr/include/eigen3")
 
 
-add_executable(Rasterizer main.cpp rasterizer.hpp rasterizer.cpp Triangle.hpp Triangle.cpp)
+add_executable(Rasterizer main.cpp rasterizer.hpp rasterizer.cpp Triangle.hpp Triangle.cpp
+               light.hpp light.cpp shaders.hpp shaders.cpp)
 target_link_libraries(Rasterizer ${OpenCV_LIBRARIES} )
 # target_link_directories(Rasterizer PRIVATE /usr/include/eigen3/Eigen)

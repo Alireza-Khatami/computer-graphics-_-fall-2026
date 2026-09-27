@@ -7,7 +7,9 @@
 #include "Texture.hpp"
 #include "Triangle.hpp"
 #include "global.hpp"
+#include "light.hpp"
 #include "rasterizer.hpp"
+#include "shaders.hpp"
 #include "main.h"
 
 // LookAt view matrix: places the camera at `eye_pos`, always facing the
@@ -123,162 +125,6 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     
 }
 
-Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload) {
-  return payload.position;
-}
-
-Eigen::Vector3f normal_fragment_shader(const fragment_shader_payload& payload) {
-  Eigen::Vector3f return_color = (payload.normal.head<3>().normalized() +
-                                  Eigen::Vector3f(1.0f, 1.0f, 1.0f)) /
-                                 2.f;
-  Eigen::Vector3f result;
-  result << return_color.x() * 255, return_color.y() * 255,
-      return_color.z() * 255;
-  return result;
-}
-
-static Eigen::Vector3f reflect(const Eigen::Vector3f& vec,
-                               const Eigen::Vector3f& axis) {
-  auto costheta = vec.dot(axis);
-  return (2 * costheta * axis - vec).normalized();
-}
-
-struct light {
-  Eigen::Vector3f position;
-  Eigen::Vector3f intensity;
-};
-
-// View matrix of the current frame. The fragment shader receives view-space
-// positions and normals, so the world-space lights are moved into view space
-// with this matrix, and the eye sits at the view-space origin.
-static Eigen::Matrix4f g_view = Eigen::Matrix4f::Identity();
-
-static Eigen::Vector3f to_view_space(const Eigen::Vector3f& world_pos) {
-  return (g_view * Eigen::Vector4f(world_pos.x(), world_pos.y(),
-                                   world_pos.z(), 1.0f)).head<3>();
-}
-
-// Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload) {
-//     Eigen::Vector3f return_color = { 0, 0, 0 };
-
-//     if (payload.texture) {
-//         // Get the texture value at the texture coordinates of the current fragment
-//         return_color = payload.texture->getColor(payload.tex_coords.x(), payload.tex_coords.y());
-//         //return_color = { payload.tex_coords.x()*255, payload.tex_coords.y()*255 ,1};
-//     }
-//     Eigen::Vector3f texture_color;
-//     texture_color << return_color.x(), return_color.y(), return_color.z();
-//     //texture_color << 0, 255, 0;
-//     // Phong reflection model coefficients
-//     Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005); // Ambient reflectivity
-//     Eigen::Vector3f kd = texture_color / 255.f;  // Diffuse reflectivity from texture
-//     Eigen::Vector3f ks = Eigen::Vector3f(0.7937, 0.7937, 0.7937); // Specular reflectivity
-
-
-//     //Vector4f prj_m = get_projection_matrix(90, 1, 0.1, 50);
-
-//      //Light sources
-//     auto l1 = light{ {20, 20, 20}, {500, 500, 500} };
-//     auto l2 = light{ {-20, 20, 0}, {500, 500, 500} };
-
-//     std::vector<light> lights = { l1, l2 };
-
-//     Eigen::Vector3f amb_light_intensity{ 10, 10, 10 }; // Ambient light intensity
-//     Eigen::Vector3f eye_pos{ 0, 0, 10 };  // Camera position
-//     float p = 150;  // Shininess factor for specular highlights
-
-//     Eigen::Vector3f color = texture_color;
-//     Eigen::Vector3f point = payload.view_pos;
-//     Eigen::Vector3f normal = payload.normal.normalized();
-
-//     Eigen::Vector3f result_color = { 0, 0, 0 };
-//     Eigen::Vector3f view_dir = (eye_pos - point).normalized();
-
-//     for (auto& light : lights) {
-//         Eigen::Vector3f light_dir = (light.position - point).normalized();
-//         float distance_squared = (light.position - point).squaredNorm();
-//         Eigen::Vector3f intensity = light.intensity / distance_squared;  // Attenuation
-
-//         //  Ambient Component 
-//         Eigen::Vector3f ambient = ka.cwiseProduct(amb_light_intensity);
-
-//         //  Diffuse Component (Lambertian shading) 
-//         float diff = std::max(normal.dot(light_dir), 0.0f);
-//         Eigen::Vector3f diffuse = kd.cwiseProduct(intensity) * diff;
-
-//         //  Specular Component (Blinn-Phong model)
-//         Eigen::Vector3f half_vector = (view_dir + light_dir).normalized();
-//         float spec = std::pow(std::max(normal.dot(half_vector), 0.0f), p);
-//         Eigen::Vector3f specular = ks.cwiseProduct(intensity) * spec;
-
-//         // Accumulate lighting contributions
-//         result_color += ambient + diffuse + specular;
-//     }
-
-//     return result_color * 255.f; // Convert to RGB range
-// }
-
-
-
-Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload) {
-    Eigen::Vector3f return_color = { 0, 0, 0 };
-
-    if (payload.texture) {
-        // Get the texture value at the texture coordinates
-        float u = std::min(1.0f, std::max(0.0f, payload.tex_coords.x()));
-        float v = std::min(1.0f, std::max(0.0f, payload.tex_coords.y()));
-        return_color = payload.texture->getColorBilinear(u, v);
-    }
-    else {
-        // If there is no texture, use white as default
-        return_color = Eigen::Vector3f(255, 255, 255);
-    }
-
-    Eigen::Vector3f texture_color;
-    texture_color << return_color.x(), return_color.y(), return_color.z();
-
-    Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005); // Ambient reflectivity
-    Eigen::Vector3f kd = texture_color / 255.f;  // Diffuse reflectivity from texture
-    Eigen::Vector3f ks = Eigen::Vector3f(0.7937, 0.7937, 0.7937); // Specular reflectivity
-
-    // Lights are fixed in world space; convert them to view space so they
-    // match `point` and `normal` (both view space).
-    auto l1 = light{ to_view_space({20, 20, 20}), {500, 500, 500} };
-    auto l2 = light{ to_view_space({-20, 20, 0}), {500, 500, 500} };
-
-    std::vector<light> lights = { l1, l2 };
-    Eigen::Vector3f amb_light_intensity{ 10, 10, 10 };
-    Eigen::Vector3f eye_pos{ 0, 0, 0 };  // the camera is the view-space origin
-
-    float p = 150;
-
-    Eigen::Vector3f color = texture_color;
-    Eigen::Vector3f point = payload.view_pos;
-    Eigen::Vector3f normal = payload.normal.normalized();
-
-    Eigen::Vector3f result_color = ka.cwiseProduct(amb_light_intensity);
-
-    Vector3f view_dir = (eye_pos - point).normalized();
-
-    for (auto& light : lights) {
-        Eigen::Vector3f light_dir = (light.position - point).normalized();
-        float r2 = (light.position - point).squaredNorm();
-        
-        // Diffuse
-        float diff = std::max(0.0f, normal.dot(light_dir));
-        Eigen::Vector3f diffuse = (kd.cwiseProduct(light.intensity / r2)) * diff;
-
-        // Specular
-        Eigen::Vector3f half_vec = (view_dir + light_dir).normalized();
-        float spec = pow(std::max(0.0f, normal.dot(half_vec)), p);
-        Eigen::Vector3f specular = (ks.cwiseProduct(light.intensity / r2)) * spec;
-
-        result_color += diffuse + specular;
-    }
-
-    return result_color * 255.f;
-}
-
 
 int main(int argc, const char** argv) {
   std::vector<Triangle*> TriangleList;
@@ -316,9 +162,10 @@ int main(int argc, const char** argv) {
     read_obj_file(Loader, obj_path, TriangleList);
     std::cout<< "Rasterizing using commandline model\n";
     r.clear(rst::Buffers::Color | rst::Buffers::Depth);
-    g_view = get_view_matrix(eye_pos);
+    Eigen::Matrix4f view = get_view_matrix(eye_pos);
+    set_light_view_matrix(view);
     r.set_model(get_model_matrix(angle));
-    r.set_view(g_view);
+    r.set_view(view);
     r.set_projection(get_projection_matrix(45.0, 1, 0.1, 50));
 
     r.draw(TriangleList);
@@ -359,9 +206,11 @@ int main(int argc, const char** argv) {
   while (key != 27 && key != 'q') {
     r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-    g_view = get_view_matrix(orbit_eye_pos(cam_radius, cam_yaw, cam_pitch));
+    Eigen::Matrix4f view =
+        get_view_matrix(orbit_eye_pos(cam_radius, cam_yaw, cam_pitch));
+    set_light_view_matrix(view);
     r.set_model(get_model_matrix(angle));
-    r.set_view(g_view);
+    r.set_view(view);
     r.set_projection(get_projection_matrix(45.0, 1, 0.1, 50));
 
     r.draw(TriangleList);
