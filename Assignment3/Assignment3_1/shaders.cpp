@@ -27,18 +27,11 @@ static Eigen::Vector3f reflect(const Eigen::Vector3f& vec,
 
 Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload) {
     Eigen::Vector3f return_color = { 0, 0, 0 };
-
     if (payload.texture) {
-        // Get the texture value at the texture coordinates
-        float u = std::min(1.0f, std::max(0.0f, payload.tex_coords.x()));
-        float v = std::min(1.0f, std::max(0.0f, payload.tex_coords.y()));
-        return_color = payload.texture->getColorBilinear(u, v);
+        // TODO:
+        // Get the texture value at the texture coordinates of the current fragment
+        // using Texture::getColorBilinear() (not getColor()).
     }
-    else {
-        // If there is no texture, use white as default
-        return_color = Eigen::Vector3f(255, 255, 255);
-    }
-
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
 
@@ -57,24 +50,16 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload) 
     Eigen::Vector3f point = payload.view_pos;
     Eigen::Vector3f normal = payload.normal.normalized();
 
-    Eigen::Vector3f result_color = ka.cwiseProduct(amb_light_intensity);
-
+    Eigen::Vector3f result_color = { 0, 0, 0 };
     Eigen::Vector3f view_dir = (eye_pos - point).normalized();
-
+    // TODO:
+    // 1. Add the *ambient* component (ka and amb_light_intensity) to
+    //    *result_color* once; it does not depend on the lights below.
     for (auto& light : lights) {
-        Eigen::Vector3f light_dir = (light.position - point).normalized();
-        float r2 = (light.position - point).squaredNorm();
-
-        // Diffuse
-        float diff = std::max(0.0f, normal.dot(light_dir));
-        Eigen::Vector3f diffuse = (kd.cwiseProduct(light.intensity / r2)) * diff;
-
-        // Specular
-        Eigen::Vector3f half_vec = (view_dir + light_dir).normalized();
-        float spec = pow(std::max(0.0f, normal.dot(half_vec)), p);
-        Eigen::Vector3f specular = (ks.cwiseProduct(light.intensity / r2)) * spec;
-
-        result_color += diffuse + specular;
+        // TODO:
+        // 2. For each light source, calculate the *diffuse* and *specular*
+        //    (Blinn-Phong) components.
+        // 3. Then, accumulate the results on the *result_color* variable.
     }
 
     return result_color * 255.f;

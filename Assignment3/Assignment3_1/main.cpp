@@ -60,69 +60,8 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
   // TODO: Use the same projection matrix from the previous assignments.
   // TODO: Implement this function
   // Create the projection matrix for the given parameters.
-  // Then return it.    
-
-  float radFOV = DEG2RAD(eye_fov);
-
-  float t = abs(zNear) * tan(radFOV / 2.0f);
-  float r = t * aspect_ratio;
-
-  float A = zNear + zFar;
-  float B = -zNear * zFar;
-
-  // Persepctive-to-orthographic matrix
-  Eigen::Matrix4f persp_to_ortho;
-  persp_to_ortho << -zNear, 0, 0, 0,
-      0, -zNear, 0, 0,
-      0, 0, A, B,
-      0, 0, 1, 0;
-
-  Eigen::Matrix4f ortho_scale;
-  float left = -r;
-  float bottom = -t;
-  ortho_scale << (2 / (r - left)), 0, 0, 0,
-      0, (2 / (t - bottom)), 0, 0,
-      0, 0, (2 / (zNear - zFar)), 0,
-      0, 0, 0, 1;
-
-  Eigen::Matrix4f ortho_trans;
-  ortho_trans << 1, 0, 0, (-(r + left) / 2),
-      0, 1, 0, (-(t + bottom) / 2),
-      0, 0, 1, (-(zNear + zFar) / 2),
-      0, 0, 0, 1;
-
-  return (ortho_scale * ortho_trans) * persp_to_ortho;
-        // Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
-
-        // // Convert FOV from degrees to radians
-        // float rad_fov = eye_fov * MY_PI / 180.0f;
-
-        // // Compute height and width of the near plane
-        // float t = std::tan(rad_fov / 2.0f) * std::abs(zNear);
-        // float r = t * aspect_ratio;
-        // float l = -r, b = -t;
-
-        // // --------------------- Perspective Projection ---------------------
-        // Eigen::Matrix4f persp_to_ortho;
-        // persp_to_ortho <<
-        //     -zNear, 0, 0, 0,
-        //     0, -zNear, 0, 0,
-        //     0, 0, zNear + zFar, -zNear * zFar,
-        //     0, 0, 1, 0;
-
-        // // --------------------- Orthographic Projection ---------------------
-        // Eigen::Matrix4f ortho;
-        // ortho <<
-        //     2/ (r - l), 0, 0, -(r + l) / (r - l),
-        //     0, 2 / (t - b), 0, -(t + b) / (t - b),
-        //     0, 0, -2 / ( zFar - zNear  ), -(zNear + zFar) / (zFar -zNear  ),
-        //     0, 0, 0, 1;
-
-        // // Combine perspective-to-orthographic and orthographic projection
-        // projection = ortho * persp_to_ortho;
-
-        // return projection;
-    
+  // Then return it.
+  return Eigen::Matrix4f::Identity();
 }
 
 
@@ -165,16 +104,10 @@ int main(int argc, const char** argv) {
 
   // Floor scene, headless (light position comes from floor_scene.cpp):
   //   ./Rasterizer floor <output.png>
-  //   ./Rasterizer floor solve        (prints the optimal light position)
   if (argc >= 2 && std::string(argv[1]) == "floor") {
     FloorScene floor(kFloorTexture);
-    if (argc >= 3 && std::string(argv[2]) == "solve") {
-      floor.print_solution();
-      return 0;
-    }
     if (argc < 3) {
-      std::cout << "usage: ./Rasterizer floor <output.png>\n"
-                << "       ./Rasterizer floor solve\n";
+      std::cout << "usage: ./Rasterizer floor <output.png>\n";
       return 1;
     }
     render_scene(r, floor, image);
