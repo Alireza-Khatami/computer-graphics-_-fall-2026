@@ -1,4 +1,5 @@
 
+#include <filesystem>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <string>
@@ -162,6 +163,47 @@ int main(int argc, const char** argv) {
   rst::rasterizer r(700, 700);
   r.set_vertex_shader(vertex_shader);
   cv::Mat image;
+
+  // Render everything to ./output:
+  //   ./Rasterizer --all <models_root>
+  // <models_root> is the models folder (e.g. ../models). Writes
+  // output/spot_texture.png (spot model, texture shader) and
+  // output/floor_scene.png (floor scene with the light from floor_scene.cpp).
+  if (argc >= 2 && std::string(argv[1]) == "--all") {
+    if (argc < 3) {
+      std::cout << "usage: ./Rasterizer --all <models_root>\n";
+      return 1;
+    }
+    namespace fs = std::filesystem;
+    fs::path root = argv[2];
+    fs::path spot_obj = root / "spot" / "spot_triangulated_good.obj";
+    fs::path spot_texture = root / "spot" / "spot_texture.png";
+    fs::path floor_texture = root / "floor" / "floor_texture.png";
+    for (const fs::path& p : {spot_obj, spot_texture, floor_texture}) {
+      if (!fs::exists(p)) {
+        std::cout << "missing file: " << p.string() << "\n";
+        return 1;
+      }
+    }
+    fs::path out_dir = "output";
+    fs::create_directories(out_dir);
+
+    SpotScene spot(spot_obj.string(), spot_texture.string());
+    render_scene(r, spot, image);
+    print_sampling_mode(r);
+    cv::imwrite((out_dir / "spot_texture.png").string(), image);
+    std::cout << "saved " << (out_dir / "spot_texture.png").string() << "\n";
+
+    FloorScene floor(floor_texture.string());
+    render_scene(r, floor, image);
+    cv::imwrite((out_dir / "floor_scene.png").string(), image);
+    Eigen::Vector3f L = floor.light_position();
+    std::cout << "saved " << (out_dir / "floor_scene.png").string()
+              << "  (light = (" << L.x() << ", " << L.y() << ", " << L.z()
+              << "), irradiance at circle E = " << floor.irradiance_at_circle()
+              << ")\n";
+    return 0;
+  }
 
   // Floor scene, headless (light position comes from floor_scene.cpp):
   //   ./Rasterizer floor <output.png>
