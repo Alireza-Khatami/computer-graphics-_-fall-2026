@@ -1,4 +1,5 @@
 #include <Eigen/Eigen>
+#include <filesystem>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <string>
@@ -81,6 +82,42 @@ void generate_validate_images(rst::rasterizer& r, TriangleScene& triangle,
     }
 }
 
+// Renders every image the assignment asks you to submit in one shot: the 5
+// triangle-scene configurations named exactly as in the "Examples:" section
+// of the handout, plus a cube.png reflecting whatever state your code is
+// currently in. Run it once before you've found the cube scene's bug (and
+// save cube.png as cube_before.png) and again after you've fixed it (save
+// it as cube_after.png).
+void export_all(rst::rasterizer& r, TriangleScene& triangle, CubeScene& cube,
+    const std::string& out_dir) {
+    std::filesystem::create_directories(out_dir);
+    auto path = [&](const std::string& name) {
+        return (std::filesystem::path(out_dir) / name).string();
+    };
+
+    struct Config {
+        int cull;   // 0=None, 1=Back, 2=Front
+        int blend;  // 0=depth_test, 1=src_alpha, 2=one
+        std::string filename;
+    };
+    std::vector<Config> configs = {
+        { 0, 0, "none-depth-test.png"  },
+        { 0, 1, "none-src-alpha.png"   },
+        { 0, 2, "none-one.png"         },
+        { 1, 0, "back-depth-test.png"  },
+        { 2, 0, "front-depth-test.png" },
+    };
+    for (auto& cfg : configs) {
+        r.clear(rst::Buffers::Color | rst::Buffers::Depth);
+        triangle.render_with(r, cfg.blend, cfg.cull);
+        save_frame(r, path(cfg.filename));
+    }
+
+    r.clear(rst::Buffers::Color | rst::Buffers::Depth);
+    cube.render(r);
+    save_frame(r, path("cube.png"));
+}
+
 }  // namespace
 
 int main(int argc, const char** argv) {
@@ -93,6 +130,16 @@ int main(int argc, const char** argv) {
   int current = 0;
 
   std::string filename = "output.png";
+
+  // Export-all mode: ./Rasterizer --export-all [output_dir]
+  // Renders every screenshot the assignment asks for (5 triangle-scene
+  // configurations plus cube.png) into output_dir (default: current
+  // directory).
+  if (argc >= 2 && std::string(argv[1]) == "--export-all") {
+    std::string out_dir = (argc >= 3) ? std::string(argv[2]) : ".";
+    export_all(r, triangle_scene, cube_scene, out_dir);
+    return 0;
+  }
 
   // Cube mode: ./Rasterizer cube <output_file>
   if (argc >= 2 && std::string(argv[1]) == "cube") {
