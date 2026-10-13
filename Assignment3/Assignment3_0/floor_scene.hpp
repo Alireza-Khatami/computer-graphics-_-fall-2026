@@ -12,7 +12,8 @@
 // fixed height. The task: find the light's (x, z) that maximizes the
 // radiance (Lambertian, so proportional to the irradiance
 // E = I * cos(theta) / r^2) at the center of the circle, and set it in
-// floor_scene.cpp (kLightX / kLightZ). The light cannot be moved with keys.
+// floor_scene.cpp (kLightX / kLightZ). In this reference build the light
+// can also be moved with j / l and i / k; the starter code has no light keys.
 //
 // The floor is shaded with diffuse_fragment_shader (no specular), so the
 // answer does not depend on where the camera is.
@@ -51,7 +52,10 @@ class FloorScene : public Scene {
   Eigen::Matrix4f model_;
   Eigen::Vector3f normal_;         // world-space floor normal
   Eigen::Vector3f circle_center_;  // world-space center of the circle
+  float light_x_;  // starts at kLightX
+  float light_z_;  // starts at kLightZ
   float light_height_;
+  float step_ = 0.1f;  // light step for j / l / i / k
   float intensity_;
   OrbitCamera camera_;
   // Last frame's matrices, for annotate().

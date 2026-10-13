@@ -20,11 +20,14 @@ const int kGrid = 16;          // quads per side
 const float kCircleU = 0.6875f;
 const float kCircleV = 0.375f;
 
-// The light's world-space x and z. Its height is fixed (light_height).
+// The light's starting world-space x and z (j / l and i / k move it from
+// here in the reference build). Its height is fixed (light_height).
+// It deliberately starts at a wrong position (the handout's Figure 2).
 // Reference solution: the floor is flat, so the radiance at the circle is
-// largest with the light straight above it: x = 8u - 4, z = 8v - 4.
-const float kLightX = 1.5f;
-const float kLightZ = -1.0f;
+// largest with the light straight above it: x = 8u - 4 = 1.5,
+// z = 8v - 4 = -1.0 (see ./Rasterizer floor solve).
+const float kLightX = -1.0f;
+const float kLightZ = 0.5f;
 
 // Rotation that tilts +Y by tilt_deg toward the horizontal direction
 // azimuth_deg (measured from +X toward +Z).
@@ -43,6 +46,8 @@ Eigen::Matrix3f tilt_rotation(float tilt_deg, float azimuth_deg) {
 FloorScene::FloorScene(const std::string& texture_path, float tilt_deg,
                        float azimuth_deg, float light_height, float intensity)
     : texture_(texture_path),
+      light_x_(kLightX),
+      light_z_(kLightZ),
       light_height_(light_height),
       intensity_(intensity) {
   Eigen::Matrix3f rot = tilt_rotation(tilt_deg, azimuth_deg);
@@ -89,7 +94,7 @@ FloorScene::FloorScene(const std::string& texture_path, float tilt_deg,
 }
 
 Eigen::Vector3f FloorScene::light_position() const {
-  return {kLightX, light_height_, kLightZ};
+  return {light_x_, light_height_, light_z_};
 }
 
 float FloorScene::irradiance_for(const Eigen::Vector3f& light_pos) const {
@@ -159,14 +164,24 @@ void FloorScene::annotate(cv::Mat& image) const {
 }
 
 bool FloorScene::on_key(int key) {
-  // Only the camera moves; the light is placed in code (kLightX / kLightZ).
-  return camera_.on_key(key);
+  if (camera_.on_key(key)) return true;
+  // Light controls (reference build only; the starter code has none).
+  if (key == 'j') { light_x_ -= step_; return true; }
+  if (key == 'l') { light_x_ += step_; return true; }
+  if (key == 'i') { light_z_ -= step_; return true; }
+  if (key == 'k') { light_z_ += step_; return true; }
+  if (key == '[') { step_ = std::max(step_ / 10.0f, 0.001f); return true; }
+  if (key == ']') { step_ = std::min(step_ * 10.0f, 1.0f); return true; }
+  return false;
 }
 
 void FloorScene::print_controls() const {
   std::cout << "\n-- Floor scene --\n"
             << "  a / d : orbit camera left / right\n"
             << "  w / s : orbit camera up / down\n"
+            << "  j / l : move light along -x / +x\n"
+            << "  i / k : move light along -z / +z\n"
+            << "  [ / ] : smaller / larger light step (now " << step_ << ")\n"
             << "  TAB   : switch scene\n"
             << "  Esc/q : quit\n";
 }
