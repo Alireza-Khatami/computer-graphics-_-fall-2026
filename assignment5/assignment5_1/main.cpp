@@ -6,6 +6,7 @@
 #include "Triangle.hpp"
 #include "cube.hpp"
 #include "inititiate_scene.hpp"
+#include "shadow_target_scene.hpp"
 #include <string>
 
 
@@ -20,6 +21,7 @@ static const SceneEntry scenes[] = {
   { 1, "sphere_cube_scene",       "sphere_cube_scene.ppm"       },
   { 2, "sphere_material_scene",   "sphere_material_scene.ppm"   },
   { 3, "sphere_cylinder_scene",   "sphere_cylinder_scene.ppm"   },
+  { 4, "shadow_target_scene",     "shadow_target_scene.ppm"     },
 };
 
 // Build a scene for the given mode, add the shared floor and lights, then render.
@@ -31,6 +33,7 @@ static void build_and_render(int mode, const std::string& filename) {
     case 1: instantiate_sphere_cube_scene(scene);     break;
     case 2: instantiate_sphere_material_scene(scene); break;
     case 3: instantiate_sphere_cylinder_scene(scene); break;
+    case 4: instantiate_shadow_target_scene(scene);   break;
     default: break;
   }
 
@@ -42,13 +45,20 @@ static void build_and_render(int mode, const std::string& filename) {
   mesh->materialType = DIFFUSE_AND_GLOSSY;
   scene.Add(std::move(mesh));
 
-  // Shared lights
-  scene.Add(std::make_unique<Light>(Vector3f(-20, 70, 20), 0.5));
-  scene.Add(std::make_unique<Light>(Vector3f(30, 50, -12), 0.5));
-  scene.Add(std::make_unique<Light>(Vector3f(0, 0, 5), 0.5));
+  // Shared lights (the shadow target scene has its own single light)
+  if (mode != 4) {
+    scene.Add(std::make_unique<Light>(Vector3f(-20, 70, 20), 0.5));
+    scene.Add(std::make_unique<Light>(Vector3f(30, 50, -12), 0.5));
+    scene.Add(std::make_unique<Light>(Vector3f(0, 0, 5), 0.5));
+  } else {
+    std::cout << "Light at (" << kLightFoot.x << ", " << kLightY << ", "
+              << kLightFoot.z << "), marker at (" << kMarker.x << ", "
+              << kMarker.y << ", " << kMarker.z << ")\n";
+  }
 
   Renderer r;
   r.Render(scene, filename);
+  if (mode == 4) check_shadow_target(scene);
 }
 
 // In the main function of the program, we create the scene (create objects and
@@ -56,8 +66,8 @@ static void build_and_render(int mode, const std::string& filename) {
 // maximum recursion depth, field-of-view, etc.). We then call the render
 // function().
 int main(int argc, char** argv) {
-  if (argc > 2 || argc == 1) {
-    std::cout << "Usage: ./pathtracer <scene_mode|validation>" << std::endl;
+  if (argc > 3 || argc == 1) {
+    std::cout << "Usage: ./RayTracing <scene_mode|validate> [output.ppm]" << std::endl;
     return 0;
   }
 
@@ -75,10 +85,9 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  // Normal mode: render a single scene to binary.ppm
+  // Normal mode: render a single scene to binary.ppm (or the given file)
   int scene_mode = arg.empty() ? 0 : std::stoi(arg);
-  build_and_render(scene_mode, "binary.ppm");
+  build_and_render(scene_mode, argc == 3 ? argv[2] : "binary.ppm");
 
   return 0;
 }
-

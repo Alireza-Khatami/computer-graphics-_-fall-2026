@@ -198,35 +198,11 @@ Vector3f castRay(const Vector3f &orig, const Vector3f &dir, const Scene &scene,
           bool inShadow = shadow_res && (shadow_res->tNear * shadow_res->tNear <
                                          lightDistance2);
 
-          // TODO ---------------------------------------------------------------
-          // Currently, the diffuse lighting term always adds the light contribution:
-          //     lightAmt += light->intensity * LdotN;
-          //
-          // Modify this so that the light only contributes when the point is NOT in shadow.
-          //
-          // 1. Use the boolean 'inShadow' computed above.
-          // 2. If 'inShadow' is true, the point should receive no diffuse illumination.
-          // 3. Otherwise, add the normal diffuse term.
-          // --------------------------------------------------------------------
-          // lightAmt+= light->intensity * LdotN;
+
           lightAmt += inShadow ? 0 : light->intensity * LdotN;
 
           Vector3f reflectionDirection = reflect(-lightDir, N);
-          // TODO ---------------------------------------------------------------
-          // Add the specular reflection component of the Phong illumination model.
-          // 1. Use the reflection vector you just computed (reflectionDirection)
-          //    and the view direction (dir) to calculate the specular highlight.
-          // 2. The Phong model defines the specular term as:
-          //        (max(0,-(R · V))) ^ specularExponent
-          //    where:
-          //       R = #reflectionDirection
-          //       V = view direction (opposite of #dir)
-          //       specularExponent = shininess value of the material #payload->hit_obj->specularExponent
-          // 3. Multiply this term by the light intensity ##light->intensity
-          //    and accumulate it into 'specularColor'. This will make surfaces appear shiny where the view direction
-          // aligns with the reflection of the light.
-          // ---------------------------------------------------------------------
-        // specularColor = specularColor;
+
           specularColor +=
               powf(std::max(0.f, -dotProduct(reflectionDirection, dir)),
                    payload->hit_obj->specularExponent) *

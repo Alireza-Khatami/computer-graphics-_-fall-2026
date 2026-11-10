@@ -97,6 +97,7 @@ class Cylinder : public Object {
   }
 
   Vector3f evalDiffuseColor(const Vector2f& st) const override {
+    if (!checkered) return diffuseColor;
     float scale = 4.0f;
     float pattern =
         (fmodf(st.x * scale, 1.0f) > 0.5f) ^ (fmodf(st.y * scale, 1.0f) > 0.5f);
@@ -107,4 +108,5 @@ class Cylinder : public Object {
   float radius;
   float halfHeight;
   float radius2;
+  bool checkered = true;  // false: plain diffuseColor (used for the floor marker)
 };

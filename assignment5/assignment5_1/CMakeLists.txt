@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 project(RayTracing)
 
 set(CMAKE_CXX_STANDARD 17)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 set(EIGEN3_INCLUDE_DIR "D:/Downloads/Programs/opencv/build/x64/vc16/lib")
 
 include_directories(${EIGEN3_INCLUDE_DIR})
-add_executable(RayTracing main.cpp Object.hpp Vector.hpp Sphere.hpp global.hpp Triangle.hpp Scene.cpp Scene.hpp Light.hpp Renderer.cpp Renderer.hpp Cylinder.hpp cube.hpp)
+add_executable(RayTracing main.cpp Object.hpp Vector.hpp Sphere.hpp global.hpp Triangle.hpp Scene.cpp Scene.hpp Light.hpp Renderer.cpp Renderer.hpp Cylinder.hpp cube.hpp shadow_target_scene.hpp)
 # target_compile_options(RayTracing PUBLIC -Wall -Wextra -pedantic -Wshadow -Wreturn-type -fsanitize=undefined)
 target_compile_features(RayTracing PUBLIC cxx_std_17)
 # target_link_libraries(RayTracing PUBLIC -fsanitize=undefined)
