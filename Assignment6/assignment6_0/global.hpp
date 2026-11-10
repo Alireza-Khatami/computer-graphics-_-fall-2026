@@ -29,11 +29,11 @@ inline bool solveQuadratic(const float &a, const float &b, const float &c,
   return true;
 }
 
+// One random generator per thread, seeded once. (Creating and seeding a new
+// std::random_device + std::mt19937 on every call made rendering ~46x slower.)
 inline float get_random_float() {
-  std::random_device dev;
-  std::mt19937 rng(dev());
-   std::uniform_real_distribution<float> dist(
-      0.f, 1.f);// distribution in range [1, 6]
+  thread_local std::mt19937 rng(std::random_device{}());
+  thread_local std::uniform_real_distribution<float> dist(0.f, 1.f);
   return dist(rng);
 }
 

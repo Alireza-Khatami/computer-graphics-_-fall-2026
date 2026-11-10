@@ -108,9 +108,11 @@ Vector3f Scene::castRay(const Ray &ray) const {
         Ray newRay(hitPoint, wi);
         Intersection newHit = intersect(newRay);
 
-        if (newHit.happened && !newHit.m->hasEmission()) {
+        float pdf_val = hit.m->pdf(wo, wi, N);
+        // A direction exactly tangent to the surface gets pdf = 0 (and eval = 0):
+        // dividing would give 0/0 = NaN and turn the whole pixel NaN.
+        if (newHit.happened && !newHit.m->hasEmission() && pdf_val > EPSILON) {
             Vector3f eval = hit.m->eval(wo, wi, N) ;
-            float pdf_val = hit.m->pdf(wo, wi, N);
             float cos_theta = std::max(0.0f, dotProduct(wi, N));
             L_indir = castRay(newRay) * eval * cos_theta / pdf_val / RussianRoulette;
         }
