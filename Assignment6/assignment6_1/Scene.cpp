@@ -61,7 +61,7 @@ Vector3f Scene::castRay(const Ray &ray) const {
 // TODO: Apply Russian Roulette to decide whether to continue
 // TODO: Sample an indirect direction from the material
 // TODO: Cast a secondary ray and continue only if it hits a non-emissive object
-// TODO: Evaluate BRDF, compute pdf, cosine term, and accumulate indirect lighting
+// TODO: Evaluate BRDF, compute pdf, cosine term, and accumulate indirect lighting (skip the sample if pdf <= EPSILON, otherwise 0/0 gives NaN pixels)
 
 // TODO: Return L_dir + L_indir
 return Vector3f(0.0f);

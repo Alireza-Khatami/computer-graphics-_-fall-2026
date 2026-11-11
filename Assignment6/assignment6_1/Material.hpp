@@ -146,6 +146,7 @@ Vector3f Material::sample(const Vector3f &wi, const Vector3f &N) {
       break;
     }
   }
+  return Vector3f(0.0f);
 }
 
 
@@ -160,6 +161,7 @@ float Material::pdf(const Vector3f &wi, const Vector3f &wo, const Vector3f &N) {
       break;
     }
   }
+  return 0.0f;
 }
 
 
